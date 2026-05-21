@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/gewci/Button";
 import { Card, CardContent } from "@/components/gewci/Card";
 import { Input } from "@/components/gewci/Input";
+import { SiteCredits } from "@/components/gewci/SiteCredits";
 
 /**
  * Default export wraps the inner form in <Suspense>. Required by Next.js 16:
@@ -204,9 +205,12 @@ function LoginContent() {
         </Card>
 
         {/* Footer */}
-        <p className="text-[10px] text-center text-gewci-dark/40 leading-normal select-none">
-          GEWCI Security Center &bull; Authorized Personnel Only
-        </p>
+        <div className="space-y-3">
+          <p className="text-[10px] text-center text-gewci-dark/40 leading-normal select-none">
+            GEWCI Security Center &bull; Authorized Personnel Only
+          </p>
+          <SiteCredits variant="light" />
+        </div>
       </div>
     </div>
   );
