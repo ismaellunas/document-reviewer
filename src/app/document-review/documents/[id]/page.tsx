@@ -1,9 +1,11 @@
 import React from "react";
+import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { Calendar, User as UserIcon } from "lucide-react";
+import { Calendar, User as UserIcon, Pencil } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { Avatar } from "@/components/gewci/Avatar";
 import { Breadcrumb } from "@/components/gewci/Breadcrumb";
+import { Button } from "@/components/gewci/Button";
 import { DocumentStatusBadge } from "@/components/drr/DocumentStatusBadge";
 import { DocumentDetailClient } from "@/components/drr/DocumentDetailClient";
 import { DocumentDeleteButton } from "@/components/drr/DocumentDeleteButton";
@@ -76,17 +78,19 @@ export default async function DocumentDetailPage({ params }: PageProps) {
 
   const creatorName = document.creator?.display_name || "Unknown Author";
 
-  // Resolve delete permission server-side so the button never leaks to
-  // viewers who lack the ability — mirrors the API route's check.
+  // Resolve edit + delete permission server-side so the controls never leak
+  // to viewers who lack the ability -- both mirror their API route checks.
   const { data: viewerProfile } = await supabase
     .from("gewci_users")
     .select("roles")
     .eq("id", user.id)
     .single<{ roles: string[] | null }>();
   const viewerRoles = viewerProfile?.roles ?? [];
-  const canDelete =
-    viewerRoles.includes("document-review:admin") ||
-    document.created_by === user.id;
+  const isAdmin = viewerRoles.includes("document-review:admin");
+  const isEditor = viewerRoles.includes("document-review:editor");
+  const isOwner = document.created_by === user.id;
+  const canEdit = isAdmin || isEditor || isOwner;
+  const canDelete = isAdmin || isOwner;
 
   return (
     <div className="space-y-6">
@@ -126,12 +130,27 @@ export default async function DocumentDetailPage({ params }: PageProps) {
             </div>
           </div>
 
-          {canDelete && (
+          {(canEdit || canDelete) && (
             <div className="flex items-center gap-2 shrink-0">
-              <DocumentDeleteButton
-                documentId={document.id}
-                documentTitle={document.title}
-              />
+              {canEdit && (
+                <Link href={`/document-review/documents/${document.id}/edit`}>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="gap-1.5"
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                    <span>Edit</span>
+                  </Button>
+                </Link>
+              )}
+              {canDelete && (
+                <DocumentDeleteButton
+                  documentId={document.id}
+                  documentTitle={document.title}
+                />
+              )}
             </div>
           )}
         </div>
