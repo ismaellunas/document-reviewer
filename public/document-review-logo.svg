@@ -1,0 +1,37 @@
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 64 64"
+  role="img"
+  aria-label="GEWCI Document Review Room"
+>
+  <title>GEWCI Document Review Room</title>
+  <desc>A navy document with a folded corner and a gold checkmark review badge.</desc>
+
+  <!-- Document body -->
+  <path
+    d="M14 6 H38 L54 22 V52 A6 6 0 0 1 48 58 H14 A6 6 0 0 1 8 52 V12 A6 6 0 0 1 14 6 Z"
+    fill="#1E3461"
+  />
+
+  <!-- Folded corner highlight -->
+  <path
+    d="M38 6 L54 22 H42 A4 4 0 0 1 38 18 V6 Z"
+    fill="#2b467d"
+  />
+
+  <!-- Text lines inside the document -->
+  <rect x="16" y="28" width="24" height="3" rx="1.5" fill="#FEFEFE" fill-opacity="0.85" />
+  <rect x="16" y="34" width="28" height="3" rx="1.5" fill="#FEFEFE" fill-opacity="0.85" />
+  <rect x="16" y="40" width="18" height="3" rx="1.5" fill="#FEFEFE" fill-opacity="0.85" />
+
+  <!-- Gold review badge with checkmark -->
+  <circle cx="48" cy="50" r="13" fill="#DBB64B" stroke="#FEFEFE" stroke-width="2" />
+  <path
+    d="M42 50 L46.5 54.5 L54 47"
+    stroke="#0A193C"
+    stroke-width="3"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    fill="none"
+  />
+</svg>

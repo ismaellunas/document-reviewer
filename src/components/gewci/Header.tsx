@@ -7,16 +7,17 @@ import {
   ChevronDown,
   LogOut,
   Settings,
-  LayoutGrid,
-  FileText,
   Calendar,
   Users,
   FileSpreadsheet,
   Menu,
   X,
-  FileCheck
+  FileCheck,
+  MonitorPlay,
+  ExternalLink,
 } from "lucide-react";
 import { Avatar } from "./Avatar";
+import { DocumentReviewLogo } from "@/components/drr/DocumentReviewLogo";
 import { createClient } from "@/lib/supabase/client";
 
 export function Header() {
@@ -82,6 +83,16 @@ export function Header() {
       icon: FileCheck,
       active: true,
       enabled: true,
+      external: false,
+    },
+    {
+      name: "Church Presentation Monitor",
+      desc: "Live presentation monitor for services",
+      href: "https://church-presentation-monitor.vercel.app/",
+      icon: MonitorPlay,
+      active: false,
+      enabled: true,
+      external: true,
     },
     {
       name: "Meeting Minutes Recorder",
@@ -90,6 +101,7 @@ export function Header() {
       icon: Calendar,
       active: false,
       enabled: false,
+      external: false,
     },
     {
       name: "Ministry Roster Manager",
@@ -98,6 +110,7 @@ export function Header() {
       icon: Users,
       active: false,
       enabled: false,
+      external: false,
     },
     {
       name: "Financial Policy Manager",
@@ -106,6 +119,7 @@ export function Header() {
       icon: FileSpreadsheet,
       active: false,
       enabled: false,
+      external: false,
     },
   ];
 
@@ -132,7 +146,7 @@ export function Header() {
               onClick={() => setIsToolMenuOpen(!isToolMenuOpen)}
               className="flex items-center gap-2 px-3 py-1.5 rounded-[--radius-button] hover:bg-gewci-gray/10 text-sm font-semibold text-primary transition-colors cursor-pointer"
             >
-              <LayoutGrid className="h-4 w-4 text-secondary" />
+              <DocumentReviewLogo className="h-5 w-5" />
               <span>{currentToolName}</span>
               <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isToolMenuOpen ? "rotate-180" : ""}`} />
             </button>
@@ -147,25 +161,61 @@ export function Header() {
                 <div className="divide-y divide-gewci-gray/10">
                   {tools.map((t, idx) => {
                     const Icon = t.icon;
+                    const className = `flex items-start gap-3 p-3 transition-colors ${
+                      t.active
+                        ? "bg-primary/5 text-primary"
+                        : t.enabled
+                        ? "hover:bg-gewci-gray/5 text-gewci-dark"
+                        : "opacity-50 cursor-not-allowed text-gewci-dark/60"
+                    }`;
+                    const body = (
+                      <>
+                        <Icon
+                          className={`h-5 w-5 mt-0.5 ${
+                            t.active ? "text-primary" : "text-gewci-gray"
+                          }`}
+                        />
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-bold flex items-center gap-1.5">
+                            <span className="truncate">{t.name}</span>
+                            {t.external && (
+                              <ExternalLink
+                                className="h-3 w-3 shrink-0 text-gewci-dark/40"
+                                aria-hidden="true"
+                              />
+                            )}
+                          </p>
+                          <p className="text-xs text-gewci-dark/60 mt-0.5">
+                            {t.desc}
+                          </p>
+                        </div>
+                      </>
+                    );
+
+                    if (t.external) {
+                      return (
+                        <a
+                          key={idx}
+                          href={t.href}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={() => setIsToolMenuOpen(false)}
+                          className={className}
+                        >
+                          {body}
+                        </a>
+                      );
+                    }
+
                     return (
                       <Link
                         key={idx}
                         href={t.href}
                         onClick={() => setIsToolMenuOpen(false)}
-                        className={`flex items-start gap-3 p-3 transition-colors ${
-                          t.active
-                            ? "bg-primary/5 text-primary"
-                            : t.enabled
-                            ? "hover:bg-gewci-gray/5 text-gewci-dark"
-                            : "opacity-50 cursor-not-allowed text-gewci-dark/60"
-                        }`}
+                        className={className}
                         style={{ pointerEvents: t.enabled ? "auto" : "none" }}
                       >
-                        <Icon className={`h-5 w-5 mt-0.5 ${t.active ? "text-primary" : "text-gewci-gray"}`} />
-                        <div>
-                          <p className="text-sm font-bold">{t.name}</p>
-                          <p className="text-xs text-gewci-dark/60 mt-0.5">{t.desc}</p>
-                        </div>
+                        {body}
                       </Link>
                     );
                   })}
@@ -263,21 +313,49 @@ export function Header() {
             <div className="space-y-1">
               {tools.map((t, idx) => {
                 const Icon = t.icon;
+                const className = `flex items-center gap-3 p-2 rounded-md transition-colors ${
+                  t.active
+                    ? "bg-primary/5 text-primary font-bold"
+                    : t.enabled
+                    ? "hover:bg-gewci-gray/5 text-gewci-dark"
+                    : "opacity-40 cursor-not-allowed pointer-events-none text-gewci-dark/60"
+                }`;
+                const body = (
+                  <>
+                    <Icon className="h-4 w-4" />
+                    <span className="text-sm flex-1 truncate">{t.name}</span>
+                    {t.external && (
+                      <ExternalLink
+                        className="h-3.5 w-3.5 shrink-0 text-gewci-dark/40"
+                        aria-hidden="true"
+                      />
+                    )}
+                  </>
+                );
+
+                if (t.external) {
+                  return (
+                    <a
+                      key={idx}
+                      href={t.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className={className}
+                    >
+                      {body}
+                    </a>
+                  );
+                }
+
                 return (
                   <Link
                     key={idx}
                     href={t.href}
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className={`flex items-center gap-3 p-2 rounded.md transition-colors ${
-                      t.active
-                        ? "bg-primary/5 text-primary font-bold"
-                        : t.enabled
-                        ? "hover:bg-gewci-gray/5 text-gewci-dark"
-                        : "opacity-40 cursor-not-allowed pointer-events-none text-gewci-dark/60"
-                    }`}
+                    className={className}
                   >
-                    <Icon className="h-4 w-4" />
-                    <span className="text-sm">{t.name}</span>
+                    {body}
                   </Link>
                 );
               })}
