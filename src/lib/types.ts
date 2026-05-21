@@ -48,8 +48,32 @@ export interface AuditLogEntry {
   action: string;
   resource_type: string | null;
   resource_id: string | null;
-  details: Record<string, any>;
+  details: Record<string, unknown>;
   ip_address: string | null;
   user_agent: string | null;
   created_at?: string;
+}
+
+/**
+ * Capability flags for a viewer with respect to a specific document.
+ * Computed by the permissions service so server components stop having
+ * to redo role lookups. Mirrors the policy predicates in lib/auth/policies.
+ */
+export interface DocumentViewerCapabilities {
+  canEdit: boolean;
+  canDelete: boolean;
+  canComment: boolean;
+}
+
+export interface DashboardStats {
+  totalDocs: number;
+  inReviewDocs: number;
+  approvedDocs: number;
+  totalComments: number;
+}
+
+export interface DashboardData {
+  stats: DashboardStats;
+  recentDocs: DRRDocument[];
+  canCreate: boolean;
 }

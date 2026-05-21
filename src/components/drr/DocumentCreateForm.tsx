@@ -2,16 +2,14 @@
 
 import React from "react";
 import { useRouter } from "next/navigation";
-import { FileText, Save, ArrowLeft } from "lucide-react";
+import { Save, ArrowLeft } from "lucide-react";
 import { Input } from "@/components/gewci/Input";
 import { Textarea } from "@/components/gewci/Textarea";
 import { Button } from "@/components/gewci/Button";
 import { Card, CardContent } from "@/components/gewci/Card";
-import { createClient } from "@/lib/supabase/client";
 
 export function DocumentCreateForm() {
   const router = useRouter();
-  const supabase = createClient();
 
   const [title, setTitle] = React.useState("");
   const [content, setContent] = React.useState("");
@@ -42,12 +40,6 @@ export function DocumentCreateForm() {
     setIsLoading(true);
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        throw new Error("You must be signed in to create a document");
-      }
-
-      // API route POST request is cleaner because it runs logging automatically
       const res = await fetch("/api/v1/documents", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -55,15 +47,19 @@ export function DocumentCreateForm() {
       });
 
       if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.error || "Failed to create document");
+        const errorData = (await res.json().catch(() => ({}))) as {
+          error?: string;
+        };
+        throw new Error(errorData.error ?? "Failed to create document");
       }
 
-      const data = await res.json();
+      const data = (await res.json()) as { document: { id: string } };
       router.push(`/document-review/documents/${data.document.id}`);
       router.refresh();
-    } catch (err: any) {
-      alert(err.message || "An unexpected error occurred");
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "An unexpected error occurred";
+      alert(message);
     } finally {
       setIsLoading(false);
     }

@@ -1,8 +1,11 @@
 import React from "react";
 import Link from "next/link";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { Calendar, User as UserIcon, Pencil } from "lucide-react";
-import { createClient } from "@/lib/supabase/server";
+
+import { getServerContext } from "@/lib/http";
+import { documentsService } from "@/lib/services/documents.service";
+import { isDomainError } from "@/lib/errors";
 import { Avatar } from "@/components/gewci/Avatar";
 import { Breadcrumb } from "@/components/gewci/Breadcrumb";
 import { Button } from "@/components/gewci/Button";
@@ -10,7 +13,6 @@ import { DocumentStatusBadge } from "@/components/drr/DocumentStatusBadge";
 import { DocumentDetailClient } from "@/components/drr/DocumentDetailClient";
 import { DocumentDeleteButton } from "@/components/drr/DocumentDeleteButton";
 import { formatDate } from "@/lib/utils";
-import type { DRRComment, DRRDocument } from "@/lib/types";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -18,79 +20,23 @@ interface PageProps {
 
 export default async function DocumentDetailPage({ params }: PageProps) {
   const { id } = await params;
+  const ctx = await getServerContext();
 
-  const supabase = await createClient();
-
-  const {
-    data: { user },
-    error: authError,
-  } = await supabase.auth.getUser();
-  if (authError || !user) {
-    redirect("/login");
+  let document;
+  let comments;
+  let viewerCapabilities;
+  try {
+    ({ document, comments, viewerCapabilities } =
+      await documentsService.getDetail(ctx, id));
+  } catch (err) {
+    if (isDomainError(err) && err.code === "NOT_FOUND") {
+      notFound();
+    }
+    throw err;
   }
-
-  // Document with creator metadata
-  const { data: document, error: docError } = await supabase
-    .from("drr_documents")
-    .select(
-      `
-      *,
-      creator:gewci_users!drr_documents_created_by_fkey (
-        id,
-        email,
-        display_name,
-        avatar_url,
-        roles
-      )
-    `,
-    )
-    .eq("id", id)
-    .single<DRRDocument>();
-
-  if (docError || !document) {
-    console.error("Document detail load failed:", { id, docError });
-    notFound();
-  }
-
-  // Comments with author metadata, ordered oldest first.
-  const { data: commentsRaw, error: commentsError } = await supabase
-    .from("drr_comments")
-    .select(
-      `
-      *,
-      user:gewci_users!drr_comments_user_id_fkey (
-        id,
-        email,
-        display_name,
-        avatar_url,
-        roles
-      )
-    `,
-    )
-    .eq("document_id", id)
-    .order("created_at", { ascending: true });
-
-  if (commentsError) {
-    console.error("Failed to load comments for document:", { id, commentsError });
-  }
-
-  const comments: DRRComment[] = (commentsRaw ?? []) as DRRComment[];
 
   const creatorName = document.creator?.display_name || "Unknown Author";
-
-  // Resolve edit + delete permission server-side so the controls never leak
-  // to viewers who lack the ability -- both mirror their API route checks.
-  const { data: viewerProfile } = await supabase
-    .from("gewci_users")
-    .select("roles")
-    .eq("id", user.id)
-    .single<{ roles: string[] | null }>();
-  const viewerRoles = viewerProfile?.roles ?? [];
-  const isAdmin = viewerRoles.includes("document-review:admin");
-  const isEditor = viewerRoles.includes("document-review:editor");
-  const isOwner = document.created_by === user.id;
-  const canEdit = isAdmin || isEditor || isOwner;
-  const canDelete = isAdmin || isOwner;
+  const { canEdit, canDelete } = viewerCapabilities;
 
   return (
     <div className="space-y-6">
@@ -159,7 +105,7 @@ export default async function DocumentDetailPage({ params }: PageProps) {
       <DocumentDetailClient
         document={document}
         initialComments={comments}
-        currentUser={user}
+        currentUser={ctx.user}
       />
     </div>
   );

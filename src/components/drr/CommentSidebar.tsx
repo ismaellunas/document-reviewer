@@ -2,15 +2,15 @@
 
 import React from "react";
 import { MessageSquare, MessageCircle, ClipboardList, CheckCircle } from "lucide-react";
+import type { User } from "@supabase/supabase-js";
 import { CommentThread } from "./CommentThread";
 import { CommentForm } from "./CommentForm";
-import { createClient } from "@/lib/supabase/client";
 import { DRRComment } from "@/lib/types";
 
 interface CommentSidebarProps {
   documentId: string;
   comments: DRRComment[];
-  currentUser: any;
+  currentUser: User | null;
   onRefresh: () => void;
   anchorData?: {
     text: string;
@@ -28,38 +28,33 @@ export function CommentSidebar({
   anchorData = null,
   onClearAnchor,
 }: CommentSidebarProps) {
-  const supabase = createClient();
   const [filter, setFilter] = React.useState<"all" | "active" | "resolved">("active");
 
   const handleResolveToggle = async (commentId: string, isResolved: boolean) => {
     try {
-      const { error } = await supabase
-        .from("drr_comments")
-        .update({
-          is_resolved: isResolved,
-          resolved_by: isResolved ? currentUser?.id : null,
-          resolved_at: isResolved ? new Date().toISOString() : null,
-        })
-        .eq("id", commentId);
-
-      if (error) throw error;
-      
-      // Post audit event log
-      await fetch("/api/v1/documents/audit", {
-        method: "POST",
+      const res = await fetch(`/api/v1/comments/${commentId}`, {
+        method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: isResolved ? "annotation_resolved" : "annotation_unresolved",
-          resource_type: "annotation",
-          resource_id: commentId,
-          details: { document_id: documentId }
-        })
+        body: JSON.stringify({ is_resolved: isResolved }),
       });
+
+      if (!res.ok) {
+        const errorData = (await res.json().catch(() => ({}))) as {
+          error?: string;
+        };
+        throw new Error(
+          errorData.error ?? "Failed to update comment resolution status",
+        );
+      }
 
       onRefresh();
     } catch (err) {
       console.error("Failed to update resolution status:", err);
-      alert("Failed to update comment resolution status");
+      const message =
+        err instanceof Error
+          ? err.message
+          : "Failed to update comment resolution status";
+      alert(message);
     }
   };
 
