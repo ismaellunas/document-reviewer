@@ -3,7 +3,6 @@
 import React from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { MessageSquarePlus } from "lucide-react";
 import { DRRDocument } from "@/lib/types";
 
 interface DocumentReaderProps {
@@ -11,36 +10,97 @@ interface DocumentReaderProps {
   onTextSelect?: (selectedText: string, startOffset: number, endOffset: number) => void;
 }
 
+function isSelectionInside(container: HTMLElement, selection: Selection) {
+  if (selection.rangeCount === 0) return false;
+  const range = selection.getRangeAt(0);
+  return container.contains(range.commonAncestorContainer);
+}
+
 export function DocumentReader({ document, onTextSelect }: DocumentReaderProps) {
   const containerRef = React.useRef<HTMLDivElement>(null);
+  const lastSelectionKeyRef = React.useRef("");
 
-  const handleMouseUp = () => {
+  const captureSelection = React.useCallback(() => {
     if (!onTextSelect) return;
 
+    const container = containerRef.current;
+    if (!container) return;
+
     const selection = window.getSelection();
-    if (!selection || selection.isCollapsed) return;
+    if (!selection || selection.isCollapsed || selection.rangeCount === 0) {
+      lastSelectionKeyRef.current = "";
+      return;
+    }
+
+    if (!isSelectionInside(container, selection)) return;
 
     const text = selection.toString().trim();
     if (!text) return;
 
-    // Standard positioning check
     const range = selection.getRangeAt(0);
     const preSelectionRange = range.cloneRange();
-    
-    if (containerRef.current) {
-      preSelectionRange.selectNodeContents(containerRef.current);
-      preSelectionRange.setEnd(range.startContainer, range.startOffset);
-      const startOffset = preSelectionRange.toString().length;
-      const endOffset = startOffset + text.length;
+    preSelectionRange.selectNodeContents(container);
+    preSelectionRange.setEnd(range.startContainer, range.startOffset);
+    const startOffset = preSelectionRange.toString().length;
+    const endOffset = startOffset + text.length;
 
-      onTextSelect(text, startOffset, endOffset);
-    }
-  };
+    const selectionKey = `${startOffset}:${endOffset}:${text}`;
+    if (lastSelectionKeyRef.current === selectionKey) return;
+    lastSelectionKeyRef.current = selectionKey;
+
+    onTextSelect(text, startOffset, endOffset);
+  }, [onTextSelect]);
+
+  // Desktop uses mouseup; iOS Safari uses touch + selectionchange instead.
+  React.useEffect(() => {
+    if (!onTextSelect) return;
+
+    const container = containerRef.current;
+    if (!container) return;
+
+    let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+
+    const scheduleCapture = (delayMs: number) => {
+      if (debounceTimer) clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        debounceTimer = null;
+        captureSelection();
+      }, delayMs);
+    };
+
+    const handleSelectionChange = () => {
+      const selection = window.getSelection();
+      if (!selection || selection.isCollapsed) {
+        lastSelectionKeyRef.current = "";
+        return;
+      }
+      scheduleCapture(200);
+    };
+
+    const handleTouchEnd = () => {
+      // Safari finalizes the selection shortly after touchend.
+      scheduleCapture(50);
+    };
+
+    const handleMouseUp = () => {
+      scheduleCapture(0);
+    };
+
+    document.addEventListener("selectionchange", handleSelectionChange);
+    container.addEventListener("touchend", handleTouchEnd, { passive: true });
+    container.addEventListener("mouseup", handleMouseUp);
+
+    return () => {
+      if (debounceTimer) clearTimeout(debounceTimer);
+      document.removeEventListener("selectionchange", handleSelectionChange);
+      container.removeEventListener("touchend", handleTouchEnd);
+      container.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [onTextSelect, captureSelection]);
 
   return (
-    <div 
+    <div
       ref={containerRef}
-      onMouseUp={handleMouseUp}
       className="prose max-w-none select-text focus:outline-none"
     >
       <ReactMarkdown 
