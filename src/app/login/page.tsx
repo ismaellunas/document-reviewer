@@ -1,14 +1,36 @@
 "use client";
 
-import React from "react";
+import React, { Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { KeyRound, ShieldAlert, LogIn, ChevronRight } from "lucide-react";
+import { ShieldAlert, LogIn, Loader2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/gewci/Button";
 import { Card, CardContent } from "@/components/gewci/Card";
 import { Input } from "@/components/gewci/Input";
 
+/**
+ * Default export wraps the inner form in <Suspense>. Required by Next.js 16:
+ * useSearchParams() forces a client-render bailout, which breaks static
+ * prerendering of /login unless the consuming component sits inside a
+ * Suspense boundary. The fallback covers the brief hydration window.
+ */
 export default function LoginPage() {
+  return (
+    <Suspense fallback={<LoginFallback />}>
+      <LoginContent />
+    </Suspense>
+  );
+}
+
+function LoginFallback() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gewci-white">
+      <Loader2 className="h-6 w-6 animate-spin text-primary" />
+    </div>
+  );
+}
+
+function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const supabase = createClient();
