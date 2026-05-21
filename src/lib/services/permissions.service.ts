@@ -5,12 +5,14 @@
  * permission failures into ForbiddenError when the action is attempted.
  */
 
+import { ForbiddenError } from "@/lib/errors";
 import type { RequestContext } from "@/lib/http";
 import {
   canDeleteDocument,
   canEditDocument,
   canCommentOnDocument,
   canCreateDocument,
+  isAdmin,
 } from "@/lib/auth/policies";
 import { usersRepo } from "@/lib/repositories/users.repo";
 import type { DocumentViewerCapabilities, DRRDocument } from "@/lib/types";
@@ -39,5 +41,26 @@ export const permissionsService = {
   async canCreateDocuments(ctx: RequestContext): Promise<boolean> {
     const roles = await usersRepo.getRoles(ctx.supabase, ctx.user.id);
     return canCreateDocument(roles);
+  },
+
+  /**
+   * Predicate variant -- returns false instead of throwing. Used by UI
+   * to decide whether to render the "User management" link.
+   */
+  async isAdmin(ctx: RequestContext): Promise<boolean> {
+    const roles = await usersRepo.getRoles(ctx.supabase, ctx.user.id);
+    return isAdmin(roles);
+  },
+
+  /**
+   * Guard for admin-only services and pages. Throws ForbiddenError when
+   * the caller is not an admin so the route handler emits 403 and the
+   * server component can `redirect()` to a safe page.
+   */
+  async requireAdmin(ctx: RequestContext): Promise<void> {
+    const roles = await usersRepo.getRoles(ctx.supabase, ctx.user.id);
+    if (!isAdmin(roles)) {
+      throw new ForbiddenError("Admin access required");
+    }
   },
 };

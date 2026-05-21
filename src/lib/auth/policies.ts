@@ -13,6 +13,10 @@ interface OwnableDocument {
   created_by: string;
 }
 
+export function isAdmin(roles: readonly string[]): boolean {
+  return hasRole(roles, ROLE_ADMIN);
+}
+
 export function canCreateDocument(roles: readonly string[]): boolean {
   return hasAnyRole(roles, ROLE_ADMIN, ROLE_EDITOR);
 }

@@ -2,7 +2,8 @@
 
 import React from "react";
 import Link from "next/link";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter } from "next/navigation";
+import type { User } from "@supabase/supabase-js";
 import {
   ChevronDown,
   LogOut,
@@ -15,17 +16,26 @@ import {
   FileCheck,
   MonitorPlay,
   ExternalLink,
+  ShieldCheck,
 } from "lucide-react";
 import { Avatar } from "./Avatar";
 import { DocumentReviewLogo } from "@/components/drr/DocumentReviewLogo";
 import { createClient } from "@/lib/supabase/client";
 
+interface ViewerCapabilities {
+  isAdmin: boolean;
+  canCreateDocuments: boolean;
+}
+
 export function Header() {
   const router = useRouter();
-  const pathname = usePathname();
   const supabase = createClient();
-  
-  const [user, setUser] = React.useState<any>(null);
+
+  const [user, setUser] = React.useState<User | null>(null);
+  const [capabilities, setCapabilities] = React.useState<ViewerCapabilities>({
+    isAdmin: false,
+    canCreateDocuments: false,
+  });
   const [isToolMenuOpen, setIsToolMenuOpen] = React.useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = React.useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
@@ -42,7 +52,6 @@ export function Header() {
     }
     getUser();
 
-    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => {
         setUser(session?.user || null);
@@ -53,6 +62,27 @@ export function Header() {
       subscription.unsubscribe();
     };
   }, [supabase.auth]);
+
+  // Fetch viewer capabilities (notably `isAdmin`) so we can render the
+  // User Management link only for admins. Safe to no-op if it fails --
+  // the /admin/* server layout will redirect non-admins anyway.
+  React.useEffect(() => {
+    if (!user) {
+      setCapabilities({ isAdmin: false, canCreateDocuments: false });
+      return;
+    }
+    let cancelled = false;
+    fetch("/api/v1/me/capabilities")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (cancelled || !data?.capabilities) return;
+        setCapabilities(data.capabilities as ViewerCapabilities);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
 
   // Click outside listener to close menus
   React.useEffect(() => {
@@ -262,6 +292,17 @@ export function Header() {
                     </p>
                   </div>
                   
+                  {capabilities.isAdmin && (
+                    <Link
+                      href="/admin/users"
+                      onClick={() => setIsUserMenuOpen(false)}
+                      className="flex items-center gap-2 px-4 py-2 text-sm text-gewci-dark hover:bg-gewci-gray/5 transition-colors"
+                    >
+                      <ShieldCheck className="h-4 w-4 text-primary" />
+                      <span>User Management</span>
+                    </Link>
+                  )}
+
                   <Link
                     href="/settings"
                     onClick={() => setIsUserMenuOpen(false)}
@@ -363,10 +404,20 @@ export function Header() {
           </div>
 
           {user && (
-            <div className="border-t border-gewci-gray/10 pt-3">
+            <div className="border-t border-gewci-gray/10 pt-3 space-y-1">
+              {capabilities.isAdmin && (
+                <Link
+                  href="/admin/users"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="flex items-center gap-3 p-2 text-sm text-gewci-dark rounded-md hover:bg-gewci-gray/5 transition-colors"
+                >
+                  <ShieldCheck className="h-4 w-4 text-primary" />
+                  <span>User Management</span>
+                </Link>
+              )}
               <button
                 onClick={handleLogout}
-                className="flex w-full items-center gap-3 p-2 text-sm text-error rounded.md hover:bg-error/5 transition-colors cursor-pointer"
+                className="flex w-full items-center gap-3 p-2 text-sm text-error rounded-md hover:bg-error/5 transition-colors cursor-pointer"
               >
                 <LogOut className="h-4 w-4" />
                 <span>Sign Out</span>

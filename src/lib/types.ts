@@ -77,3 +77,15 @@ export interface DashboardData {
   recentDocs: DRRDocument[];
   canCreate: boolean;
 }
+
+/**
+ * Combined view of a user's profile (`gewci_users`) plus the auth-side
+ * facts (`auth.users`) the admin UI needs to render: last sign-in time,
+ * email-confirmed status. Returned by `usersService.list` for the admin
+ * dashboard. Plain `GEWCIUser` is unchanged.
+ */
+export interface AdminUserView extends GEWCIUser {
+  last_sign_in_at: string | null;
+  email_confirmed_at: string | null;
+  auth_created_at: string;
+}
