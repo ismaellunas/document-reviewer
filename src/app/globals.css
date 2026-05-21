@@ -1,26 +1,76 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  --color-gewci-navy: #1E3461;
+  --color-gewci-gold: #DBB64B;
+  --color-gewci-white: #FEFEFE;
+  --color-gewci-gray: #B3B9BE;
+  --color-gewci-dark: #0A193C;
+
+  /* Mapped names */
+  --color-primary: var(--color-gewci-navy);
+  --color-primary-light: #2b467d;
+  --color-primary-dark: #122242;
+  
+  --color-secondary: var(--color-gewci-gold);
+  --color-secondary-light: #e6c867;
+  --color-secondary-dark: #be9b32;
+
+  --color-background: var(--color-gewci-white);
+  --color-foreground: var(--color-gewci-dark);
+  --color-border: #E5E7EB;
+
+  --color-success: #10B981;
+  --color-warning: #F59E0B;
+  --color-error: #EF4444;
+  --color-info: #3B82F6;
+
+  /* Font variables loaded via Next.js layout */
+  --font-sans: var(--font-inter), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-heading: var(--font-outfit), var(--font-inter), system-ui, sans-serif;
+
+  /* Additional utility styles */
+  --radius-card: 12px;
+  --radius-button: 8px;
+
+  --shadow-card: 0 4px 6px -1px rgba(10, 25, 60, 0.05), 0 2px 4px -1px rgba(10, 25, 60, 0.03);
+  --shadow-card-hover: 0 10px 15px -3px rgba(10, 25, 60, 0.08), 0 4px 6px -2px rgba(10, 25, 60, 0.04);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+/* Base custom styles */
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--color-gewci-white);
+  color: var(--color-gewci-dark);
+  font-family: var(--font-sans);
+}
+
+.font-heading {
+  font-family: var(--font-heading);
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-gewci-gray);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #9fa6ad;
+}
+
+/* Glassmorphism utility */
+.glass {
+  background: rgba(254, 254, 254, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(179, 185, 190, 0.2);
 }
