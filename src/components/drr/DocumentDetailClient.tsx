@@ -59,7 +59,7 @@ export function DocumentDetailClient({
     <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_360px] gap-6 lg:gap-8 items-start">
       {/* Reader column */}
       <article className="bg-gewci-white border border-gewci-gray/20 rounded-[--radius-card] shadow-xs p-6 sm:p-8 min-w-0">
-        <DocumentReader document={document} onTextSelect={handleTextSelect} />
+        <DocumentReader doc={document} onTextSelect={handleTextSelect} />
       </article>
 
       {/* Desktop sidebar */}

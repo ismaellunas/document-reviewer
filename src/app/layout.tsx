@@ -15,8 +15,8 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
-  title: "GEWCI Document Review Room",
-  description: "A secure workspace to review and collaborate on GEWCI documents.",
+  title: "GEWCI Ministry Tools",
+  description: "A secure workspace to review and collaborate on GEWCI ministry tools.",
 };
 
 export default function RootLayout({

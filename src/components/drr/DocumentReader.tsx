@@ -6,7 +6,7 @@ import remarkGfm from "remark-gfm";
 import { DRRDocument } from "@/lib/types";
 
 interface DocumentReaderProps {
-  document: DRRDocument;
+  doc: DRRDocument;
   onTextSelect?: (selectedText: string, startOffset: number, endOffset: number) => void;
 }
 
@@ -16,7 +16,7 @@ function isSelectionInside(container: HTMLElement, selection: Selection) {
   return container.contains(range.commonAncestorContainer);
 }
 
-export function DocumentReader({ document, onTextSelect }: DocumentReaderProps) {
+export function DocumentReader({ doc, onTextSelect }: DocumentReaderProps) {
   const containerRef = React.useRef<HTMLDivElement>(null);
   const lastSelectionKeyRef = React.useRef("");
 
@@ -190,7 +190,7 @@ export function DocumentReader({ document, onTextSelect }: DocumentReaderProps) 
           ),
         }}
       >
-        {document.content || "*No content provided.*"}
+        {doc.content || "*No content provided.*"}
       </ReactMarkdown>
     </div>
   );
