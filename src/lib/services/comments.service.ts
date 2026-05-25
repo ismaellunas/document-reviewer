@@ -11,6 +11,7 @@ import type { RequestContext } from "@/lib/http";
 import {
   canCommentOnDocument,
   canResolveComment,
+  canDeleteComment,
 } from "@/lib/auth/policies";
 import {
   CreateCommentSchema,
@@ -99,7 +100,7 @@ export const commentsService = {
     }
 
     const roles = await usersRepo.getRoles(ctx.supabase, ctx.user.id);
-    if (!canResolveComment(roles)) {
+    if (!canResolveComment(roles, existing, ctx.user.id)) {
       throw new ForbiddenError(
         "Access Denied: You do not have permission to resolve comments",
       );
@@ -136,5 +137,40 @@ export const commentsService = {
     );
 
     return comment;
+  },
+
+  async delete(
+    ctx: RequestContext,
+    commentId: string,
+    options: ServiceCallOptions = {},
+  ): Promise<void> {
+    const existing = await commentsRepo.findById(ctx.supabase, commentId);
+    if (!existing) {
+      throw new NotFoundError("comment", commentId);
+    }
+
+    const roles = await usersRepo.getRoles(ctx.supabase, ctx.user.id);
+    if (!canDeleteComment(roles, existing, ctx.user.id)) {
+      throw new ForbiddenError(
+        "Access Denied: You do not have permission to delete this comment",
+      );
+    }
+
+    await commentsRepo.delete(ctx.supabase, commentId);
+
+    await auditService.record(
+      ctx,
+      {
+        action: "annotation_deleted",
+        resource_type: "annotation",
+        resource_id: commentId,
+        details: {
+          document_id: existing.document_id,
+          content_preview: existing.content.substring(0, 100),
+          is_reply: !!existing.parent_id,
+        },
+      },
+      { request: options.request },
+    );
   },
 };

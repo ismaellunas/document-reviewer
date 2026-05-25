@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Check, CheckCircle2, MessageSquare, Reply, User } from "lucide-react";
+import { Check, CheckCircle2, MessageSquare, Reply, Trash, User } from "lucide-react";
 import { Avatar } from "@/components/gewci/Avatar";
 import { CommentForm } from "./CommentForm";
 import { DRRComment } from "@/lib/types";
@@ -11,6 +11,7 @@ interface CommentThreadProps {
   comment: DRRComment;
   currentUser: any;
   onResolveToggle: (commentId: string, isResolved: boolean) => Promise<void>;
+  onDeleteComment?: (commentId: string) => Promise<void>;
   onReplySuccess: () => void;
 }
 
@@ -18,10 +19,12 @@ export function CommentThread({
   comment,
   currentUser,
   onResolveToggle,
+  onDeleteComment,
   onReplySuccess,
 }: CommentThreadProps) {
   const [isReplying, setIsReplying] = React.useState(false);
   const [isResolving, setIsResolving] = React.useState(false);
+  const [isDeleting, setIsDeleting] = React.useState(false);
 
   const authorName = comment.user?.display_name || "Unknown Reviewer";
   const userRoles = currentUser?.app_metadata?.roles || [];
@@ -31,6 +34,25 @@ export function CommentThread({
     userRoles.includes("document-review:admin") ||
     userRoles.includes("document-review:editor") ||
     currentUser?.id === comment.user_id;
+
+  const canDelete =
+    userRoles.includes("document-review:admin") ||
+    currentUser?.id === comment.user_id;
+
+  const handleDelete = async () => {
+    if (isDeleting) return;
+    if (!window.confirm("Are you sure you want to delete this comment?")) return;
+    setIsDeleting(true);
+    try {
+      if (onDeleteComment) {
+        await onDeleteComment(comment.id);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   const handleResolve = async () => {
     if (isResolving) return;
@@ -110,8 +132,8 @@ export function CommentThread({
       </p>
 
       {/* Reply and actions list */}
-      {!comment.is_resolved && (
-        <div className="mt-4 flex items-center gap-4 text-xs font-semibold text-gewci-dark/50 select-none">
+      <div className="mt-4 flex items-center gap-4 text-xs font-semibold text-gewci-dark/50 select-none">
+        {!comment.is_resolved && (
           <button
             onClick={() => setIsReplying(!isReplying)}
             className="flex items-center gap-1 hover:text-primary transition-colors cursor-pointer"
@@ -119,8 +141,18 @@ export function CommentThread({
             <Reply className="h-3.5 w-3.5" />
             <span>Reply</span>
           </button>
-        </div>
-      )}
+        )}
+        {canDelete && (
+          <button
+            onClick={handleDelete}
+            disabled={isDeleting}
+            className="flex items-center gap-1 text-error/85 hover:text-error transition-colors cursor-pointer disabled:opacity-50"
+          >
+            <Trash className="h-3.5 w-3.5" />
+            <span>Delete</span>
+          </button>
+        )}
+      </div>
 
       {/* Reply input form */}
       {isReplying && (
@@ -142,6 +174,10 @@ export function CommentThread({
         <div className="mt-4 pl-4 border-l border-gewci-gray/20 space-y-4">
           {comment.replies.map((reply) => {
             const replyAuthor = reply.user?.display_name || "Unknown User";
+            const canDeleteReply =
+              userRoles.includes("document-review:admin") ||
+              currentUser?.id === reply.user_id;
+
             return (
               <div key={reply.id} className="flex items-start gap-2.5">
                 <Avatar
@@ -156,9 +192,23 @@ export function CommentThread({
                     <span className="text-xs font-bold text-gewci-dark">
                       {replyAuthor}
                     </span>
-                    <span className="text-[9px] text-gewci-dark/40 font-semibold">
-                      {formatRelativeTime(reply.created_at)}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[9px] text-gewci-dark/40 font-semibold">
+                        {formatRelativeTime(reply.created_at)}
+                      </span>
+                      {canDeleteReply && (
+                        <button
+                          onClick={() => {
+                            if (window.confirm("Are you sure you want to delete this reply?")) {
+                              onDeleteComment?.(reply.id);
+                            }
+                          }}
+                          className="text-[9px] text-error hover:text-error-dark font-bold cursor-pointer transition-colors"
+                        >
+                          Delete
+                        </button>
+                      )}
+                    </div>
                   </div>
                   <p className="text-xs sm:text-sm text-gewci-dark/85 leading-relaxed whitespace-pre-wrap">
                     {reply.content}

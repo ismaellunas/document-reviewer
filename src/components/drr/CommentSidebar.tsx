@@ -58,6 +58,32 @@ export function CommentSidebar({
     }
   };
 
+  const handleDeleteComment = async (commentId: string) => {
+    try {
+      const res = await fetch(`/api/v1/comments/${commentId}`, {
+        method: "DELETE",
+      });
+
+      if (!res.ok) {
+        const errorData = (await res.json().catch(() => ({}))) as {
+          error?: string;
+        };
+        throw new Error(
+          errorData.error ?? "Failed to delete comment",
+        );
+      }
+
+      onRefresh();
+    } catch (err) {
+      console.error("Failed to delete comment:", err);
+      const message =
+        err instanceof Error
+          ? err.message
+          : "Failed to delete comment";
+      alert(message);
+    }
+  };
+
   // Group nested comments (replies) into their parents
   const processedComments = React.useMemo(() => {
     const parentComments = comments.filter((c) => !c.parent_id);
@@ -156,6 +182,7 @@ export function CommentSidebar({
               comment={thread}
               currentUser={currentUser}
               onResolveToggle={handleResolveToggle}
+              onDeleteComment={handleDeleteComment}
               onReplySuccess={onRefresh}
             />
           ))

@@ -43,8 +43,13 @@ export function canCommentOnDocument(roles: readonly string[]): boolean {
   return hasAnyRole(roles, ROLE_ADMIN, ROLE_EDITOR, ROLE_REVIEWER);
 }
 
-export function canResolveComment(roles: readonly string[]): boolean {
-  return hasAnyRole(roles, ROLE_ADMIN, ROLE_EDITOR, ROLE_REVIEWER);
+export function canResolveComment(
+  roles: readonly string[],
+  comment: { user_id: string } | null | undefined,
+  userId: string,
+): boolean {
+  if (hasAnyRole(roles, ROLE_ADMIN, ROLE_EDITOR)) return true;
+  return comment?.user_id === userId;
 }
 
 export function canDeleteComment(

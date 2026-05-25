@@ -21,3 +21,9 @@ export const PATCH = withAuth<{ id: string }>(async ({ ctx, request, params }) =
   });
   return NextResponse.json({ comment });
 });
+
+export const DELETE = withAuth<{ id: string }>(async ({ ctx, request, params }) => {
+  const { id } = await params;
+  await commentsService.delete(ctx, id, { request });
+  return NextResponse.json({ success: true });
+});

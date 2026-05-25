@@ -108,6 +108,18 @@ export const commentsRepo = {
     return { affected: data ? 1 : 0, comment: data };
   },
 
+  async delete(supabase: SupabaseClient, id: string): Promise<boolean> {
+    const { error } = await supabase
+      .from("drr_comments")
+      .delete()
+      .eq("id", id);
+
+    if (error) {
+      throw new Error(`commentsRepo.delete: ${error.message}`);
+    }
+    return true;
+  },
+
   async countAll(supabase: SupabaseClient): Promise<number> {
     const { count, error } = await supabase
       .from("drr_comments")
