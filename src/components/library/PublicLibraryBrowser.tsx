@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { Calendar, ChevronRight, FileText, Search } from "lucide-react";
+import { Calendar, ChevronRight, FileText, Heart, Search } from "lucide-react";
 import { Card, CardContent } from "@/components/gewci/Card";
 import { EmptyState } from "@/components/gewci/EmptyState";
 import { Input } from "@/components/gewci/Input";
@@ -37,6 +37,24 @@ export function PublicLibraryBrowser({ documents }: PublicLibraryBrowserProps) {
           review workflow.
         </p>
       </section>
+
+      <Link
+        href="/prayer-requests"
+        className="flex items-center gap-4 rounded-[--radius-card] border border-gewci-gray/20 bg-gradient-to-r from-primary/5 to-secondary/10 p-5 shadow-xs hover:border-primary/25 hover:shadow-sm transition-all group"
+      >
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary group-hover:bg-primary group-hover:text-gewci-white transition-colors">
+          <Heart className="h-5 w-5" />
+        </div>
+        <div className="min-w-0">
+          <p className="text-sm font-bold text-gewci-dark group-hover:text-primary transition-colors">
+            Submit a Prayer Request
+          </p>
+          <p className="text-xs text-gewci-dark/60 mt-0.5">
+            Confidential — we would be honoured to pray for you.
+          </p>
+        </div>
+        <ChevronRight className="h-5 w-5 text-gewci-dark/30 group-hover:text-primary ml-auto shrink-0" />
+      </Link>
 
       <div className="bg-gewci-white p-4 rounded-[--radius-card] border border-gewci-gray/20 shadow-xs">
         <div className="relative w-full max-w-xl">

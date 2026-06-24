@@ -89,3 +89,19 @@ export interface AdminUserView extends GEWCIUser {
   email_confirmed_at: string | null;
   auth_created_at: string;
 }
+
+export type PrayerRequestStatus = "pending" | "prayed";
+
+export interface PrayerRequest {
+  id: string;
+  first_name: string;
+  last_name: string | null;
+  email: string | null;
+  phone: string | null;
+  body: string;
+  wants_pray_with: boolean;
+  contact_via_email: boolean;
+  status: PrayerRequestStatus;
+  prayed_at: string | null;
+  created_at: string;
+}

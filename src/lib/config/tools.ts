@@ -2,6 +2,7 @@ import {
   Calendar,
   FileCheck,
   FileSpreadsheet,
+  Heart,
   MonitorPlay,
   Users,
   type LucideIcon,
@@ -11,6 +12,7 @@ export const CHURCH_PRESENTATION_MONITOR_URL =
   "https://church-presentation-monitor.vercel.app/";
 
 export interface MinistryTool {
+  id: string;
   name: string;
   desc: string;
   href: string;
@@ -19,8 +21,11 @@ export interface MinistryTool {
   external: boolean;
 }
 
+export const PRAYER_REQUESTS_TOOL_ID = "prayer-requests";
+
 export const MINISTRY_TOOLS: MinistryTool[] = [
   {
+    id: "document-review",
     name: "Document Review Room",
     desc: "Collaborative document review and commenting",
     href: "/document-review",
@@ -29,6 +34,7 @@ export const MINISTRY_TOOLS: MinistryTool[] = [
     external: false,
   },
   {
+    id: "church-presentation-monitor",
     name: "Church Presentation Monitor",
     desc: "Live presentation monitor for services",
     href: CHURCH_PRESENTATION_MONITOR_URL,
@@ -37,6 +43,16 @@ export const MINISTRY_TOOLS: MinistryTool[] = [
     external: true,
   },
   {
+    id: PRAYER_REQUESTS_TOOL_ID,
+    name: "Prayer Requests",
+    desc: "Submit a confidential prayer request",
+    href: "/prayer-requests",
+    icon: Heart,
+    enabled: true,
+    external: false,
+  },
+  {
+    id: "meeting-minutes",
     name: "Meeting Minutes Recorder",
     desc: "Meeting transcriptions and notes (Future)",
     href: "#",
@@ -45,6 +61,7 @@ export const MINISTRY_TOOLS: MinistryTool[] = [
     external: false,
   },
   {
+    id: "ministry-roster",
     name: "Ministry Roster Manager",
     desc: "Organize volunteers and schedules (Future)",
     href: "#",
@@ -53,6 +70,7 @@ export const MINISTRY_TOOLS: MinistryTool[] = [
     external: false,
   },
   {
+    id: "financial-policy",
     name: "Financial Policy Manager",
     desc: "Audit logs and financial policy documents (Future)",
     href: "#",
@@ -61,3 +79,18 @@ export const MINISTRY_TOOLS: MinistryTool[] = [
     external: false,
   },
 ];
+
+/** Swap prayer-requests for the admin inbox when the viewer is an admin. */
+export function resolveMinistryTools(options: { isAdmin?: boolean } = {}): MinistryTool[] {
+  return MINISTRY_TOOLS.map((tool) => {
+    if (tool.id === PRAYER_REQUESTS_TOOL_ID && options.isAdmin) {
+      return {
+        ...tool,
+        name: "Manage Prayer Requests",
+        desc: "Review submissions, mark prayed, and print lists",
+        href: "/admin/prayer-requests",
+      };
+    }
+    return tool;
+  });
+}

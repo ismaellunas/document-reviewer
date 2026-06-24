@@ -28,7 +28,7 @@ export function ToolsMenu({
       <div className={cn("space-y-1", className)}>
         {tools.map((tool) => (
           <ToolMenuItem
-            key={tool.name}
+            key={tool.id}
             tool={tool}
             active={tool.name === activeToolName}
             onNavigate={onNavigate}
@@ -49,7 +49,7 @@ export function ToolsMenu({
       <div className="divide-y divide-gewci-gray/10">
         {tools.map((tool) => (
           <ToolMenuItem
-            key={tool.name}
+            key={tool.id}
             tool={tool}
             active={tool.name === activeToolName}
             onNavigate={onNavigate}

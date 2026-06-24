@@ -21,6 +21,12 @@ export function Footer() {
             <Link href="/" className="hover:text-gewci-gold transition-colors">
               Document Library
             </Link>
+            <Link
+              href="/prayer-requests"
+              className="hover:text-gewci-gold transition-colors"
+            >
+              Prayer Requests
+            </Link>
             <a
               href={CHURCH_PRESENTATION_MONITOR_URL}
               target="_blank"

@@ -48,7 +48,9 @@ export async function updateSession(request: NextRequest) {
 
   const isPublicRoute =
     request.nextUrl.pathname === "/" ||
-    request.nextUrl.pathname.startsWith("/documents/");
+    request.nextUrl.pathname.startsWith("/documents/") ||
+    request.nextUrl.pathname.startsWith("/prayer-requests") ||
+    request.nextUrl.pathname.startsWith("/api/v1/public/");
 
   // Unauthenticated users hitting protected routes go to /login (with a redirect hint).
   if (!user && !isAuthPage && !isPublicRoute) {

@@ -166,3 +166,15 @@ body {
 .document-editor-content--fullscreen {
   min-height: calc(100vh - 14rem);
 }
+
+@media print {
+  header,
+  footer,
+  .no-print {
+    display: none !important;
+  }
+
+  body {
+    background: white !important;
+  }
+}

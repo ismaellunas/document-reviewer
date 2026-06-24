@@ -12,11 +12,12 @@ import {
   X,
   FileCheck,
   ShieldCheck,
+  Heart,
 } from "lucide-react";
 import { Avatar } from "./Avatar";
 import { DocumentReviewLogo } from "@/components/drr/DocumentReviewLogo";
 import { ToolsMenu } from "@/components/gewci/ToolsMenu";
-import { MINISTRY_TOOLS } from "@/lib/config/tools";
+import { resolveMinistryTools } from "@/lib/config/tools";
 import { createClient } from "@/lib/supabase/client";
 
 interface ViewerCapabilities {
@@ -101,6 +102,11 @@ export function Header() {
     setIsMobileMenuOpen(false);
   };
 
+  const tools = React.useMemo(
+    () => resolveMinistryTools({ isAdmin: capabilities.isAdmin }),
+    [capabilities.isAdmin],
+  );
+
   const currentToolName = "Document Review Room";
 
   return (
@@ -130,7 +136,7 @@ export function Header() {
             {isToolMenuOpen && (
               <div className="absolute left-0 mt-2 w-80 bg-gewci-white border border-gewci-gray/20 rounded-[--radius-card] shadow-lg animate-[slide-up_0.2s_ease-out] z-50">
                 <ToolsMenu
-                  tools={MINISTRY_TOOLS}
+                  tools={tools}
                   activeToolName={currentToolName}
                   onNavigate={closeMenus}
                 />
@@ -182,6 +188,17 @@ export function Header() {
                     >
                       <ShieldCheck className="h-4 w-4 text-primary" />
                       <span>User Management</span>
+                    </Link>
+                  )}
+
+                  {capabilities.isAdmin && (
+                    <Link
+                      href="/admin/prayer-requests"
+                      onClick={() => setIsUserMenuOpen(false)}
+                      className="flex items-center gap-2 px-4 py-2 text-sm text-gewci-dark hover:bg-gewci-gray/5 transition-colors"
+                    >
+                      <Heart className="h-4 w-4 text-primary" />
+                      <span>Manage Prayer Requests</span>
                     </Link>
                   )}
 
@@ -241,7 +258,7 @@ export function Header() {
               Ministry Tools
             </span>
             <ToolsMenu
-              tools={MINISTRY_TOOLS}
+              tools={tools}
               activeToolName={currentToolName}
               variant="list"
               onNavigate={closeMenus}
@@ -258,6 +275,16 @@ export function Header() {
                 >
                   <ShieldCheck className="h-4 w-4 text-primary" />
                   <span>User Management</span>
+                </Link>
+              )}
+              {capabilities.isAdmin && (
+                <Link
+                  href="/admin/prayer-requests"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="flex items-center gap-3 p-2 text-sm text-gewci-dark rounded-md hover:bg-gewci-gray/5 transition-colors"
+                >
+                  <Heart className="h-4 w-4 text-primary" />
+                  <span>Manage Prayer Requests</span>
                 </Link>
               )}
               <button

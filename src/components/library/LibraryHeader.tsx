@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import type { User } from "@supabase/supabase-js";
 import {
   ChevronDown,
+  Heart,
   LogIn,
   LogOut,
   Menu,
@@ -17,7 +18,7 @@ import {
 import { Avatar } from "@/components/gewci/Avatar";
 import { Button } from "@/components/gewci/Button";
 import { ToolsMenu } from "@/components/gewci/ToolsMenu";
-import { MINISTRY_TOOLS } from "@/lib/config/tools";
+import { MINISTRY_TOOLS, resolveMinistryTools } from "@/lib/config/tools";
 import { createClient } from "@/lib/supabase/client";
 
 interface ViewerCapabilities {
@@ -107,6 +108,11 @@ export function LibraryHeader() {
     setIsMobileMenuOpen(false);
   };
 
+  const tools = React.useMemo(
+    () => resolveMinistryTools({ isAdmin: capabilities.isAdmin }),
+    [capabilities.isAdmin],
+  );
+
   return (
     <header className="sticky top-0 z-40 w-full bg-gewci-white border-b border-gewci-gray/20 shadow-sm">
       <div className="h-1.5 w-full bg-primary" />
@@ -137,7 +143,7 @@ export function LibraryHeader() {
             {isToolsOpen && (
               <div className="absolute left-0 mt-2 w-80 bg-gewci-white border border-gewci-gray/20 rounded-[--radius-card] shadow-lg animate-[slide-up_0.2s_ease-out] z-50">
                 <ToolsMenu
-                  tools={MINISTRY_TOOLS}
+                  tools={tools}
                   onNavigate={closeMenus}
                 />
               </div>
@@ -201,6 +207,17 @@ export function LibraryHeader() {
                       </Link>
                     )}
 
+                    {capabilities.isAdmin && (
+                      <Link
+                        href="/admin/prayer-requests"
+                        onClick={() => setIsUserMenuOpen(false)}
+                        className="flex items-center gap-2 px-4 py-2 text-sm text-gewci-dark hover:bg-gewci-gray/5 transition-colors"
+                      >
+                        <Heart className="h-4 w-4 text-primary" />
+                        <span>Manage Prayer Requests</span>
+                      </Link>
+                    )}
+
                     <Link
                       href="/settings"
                       onClick={() => setIsUserMenuOpen(false)}
@@ -256,7 +273,7 @@ export function LibraryHeader() {
               Tools
             </span>
             <ToolsMenu
-              tools={MINISTRY_TOOLS}
+              tools={tools}
               variant="list"
               onNavigate={closeMenus}
             />
