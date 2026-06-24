@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Outfit } from "next/font/google";
 import NextTopLoader from "nextjs-toploader";
+import { getSiteUrl } from "@/lib/config/site";
 import "./globals.css";
 
 const inter = Inter({
@@ -15,14 +16,8 @@ const outfit = Outfit({
   display: "swap",
 });
 
-const siteUrl =
-  process.env.NEXT_PUBLIC_SITE_URL ??
-  (process.env.VERCEL_URL
-    ? `https://${process.env.VERCEL_URL}`
-    : "http://localhost:3000");
-
 export const metadata: Metadata = {
-  metadataBase: new URL(siteUrl),
+  metadataBase: new URL(getSiteUrl()),
   title: "GEWCI Ministry Tools",
   description:
     "Browse approved ministry documents and access GEWCI tools for review, collaboration, and presentation.",
