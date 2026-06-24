@@ -3,19 +3,54 @@
 import React from "react";
 import { useRouter } from "next/navigation";
 import { Save, ArrowLeft } from "lucide-react";
-import { Input } from "@/components/gewci/Input";
-import { Textarea } from "@/components/gewci/Textarea";
 import { Button } from "@/components/gewci/Button";
 import { Card, CardContent } from "@/components/gewci/Card";
+import { AutoSaveStatus } from "@/components/drr/AutoSaveStatus";
+import { DocumentEditorWorkspace } from "@/components/drr/DocumentEditorWorkspace";
+import { useDocumentAutoSave } from "@/hooks/useDocumentAutoSave";
+import type { DocumentStatus } from "@/lib/types";
+
+const CREATE_STATUS_OPTIONS: { value: DocumentStatus; label: string }[] = [
+  { value: "draft", label: "Draft (Private or hidden from reviewers)" },
+  { value: "in_review", label: "In Review (Ready for reviewer annotations)" },
+];
 
 export function DocumentCreateForm() {
   const router = useRouter();
 
+  const [documentId, setDocumentId] = React.useState<string | null>(null);
   const [title, setTitle] = React.useState("");
   const [content, setContent] = React.useState("");
-  const [status, setStatus] = React.useState("draft");
+  const [status, setStatus] = React.useState<DocumentStatus>("draft");
+  const [savedSnapshot, setSavedSnapshot] = React.useState({
+    title: "",
+    content: "",
+    status: "draft" as DocumentStatus,
+  });
   const [isLoading, setIsLoading] = React.useState(false);
-  const [errors, setErrors] = React.useState<{ title?: string; content?: string }>({});
+  const [errors, setErrors] = React.useState<{ title?: string; content?: string }>(
+    {},
+  );
+
+  const {
+    autoSaveStatus,
+    autoSaveError,
+    lastSavedAt,
+    isDirty,
+    canAutoSave,
+  } = useDocumentAutoSave({
+    documentId,
+    title,
+    content,
+    status,
+    savedSnapshot,
+    onSaved: setSavedSnapshot,
+    onDocumentCreated: (id) => {
+      setDocumentId(id);
+      router.replace(`/document-review/documents/${id}/edit`);
+      router.refresh();
+    },
+  });
 
   const validate = () => {
     const newErrors: typeof errors = {};
@@ -33,6 +68,47 @@ export function DocumentCreateForm() {
     return Object.keys(newErrors).length === 0;
   };
 
+  const saveDocument = async () => {
+    const payload = {
+      title: title.trim(),
+      content,
+      status,
+    };
+
+    if (documentId) {
+      const res = await fetch(`/api/v1/documents/${documentId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) {
+        const errorData = (await res.json().catch(() => ({}))) as {
+          error?: string;
+        };
+        throw new Error(errorData.error ?? "Failed to save document");
+      }
+      return documentId;
+    }
+
+    const res = await fetch("/api/v1/documents", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) {
+      const errorData = (await res.json().catch(() => ({}))) as {
+        error?: string;
+      };
+      throw new Error(errorData.error ?? "Failed to create document");
+    }
+
+    const data = (await res.json()) as { document: { id: string } };
+    setDocumentId(data.document.id);
+    setSavedSnapshot(payload);
+    return data.document.id;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
@@ -40,21 +116,8 @@ export function DocumentCreateForm() {
     setIsLoading(true);
 
     try {
-      const res = await fetch("/api/v1/documents", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, content, status }),
-      });
-
-      if (!res.ok) {
-        const errorData = (await res.json().catch(() => ({}))) as {
-          error?: string;
-        };
-        throw new Error(errorData.error ?? "Failed to create document");
-      }
-
-      const data = (await res.json()) as { document: { id: string } };
-      router.push(`/document-review/documents/${data.document.id}`);
+      const id = isDirty || !documentId ? await saveDocument() : documentId;
+      router.push(`/document-review/documents/${id}`);
       router.refresh();
     } catch (err) {
       const message =
@@ -67,49 +130,41 @@ export function DocumentCreateForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="flex items-center justify-end">
+        <AutoSaveStatus
+          status={autoSaveStatus}
+          error={autoSaveError}
+          lastSavedAt={lastSavedAt}
+          isDirty={isDirty}
+          canAutoSave={canAutoSave}
+        />
+      </div>
+
       <Card className="border border-gewci-gray/20">
-        <CardContent className="p-6 space-y-5">
-          {/* Title */}
-          <Input
-            label="Document Title"
-            placeholder="e.g., Annual Youth Ministry Strategy 2026"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            error={errors.title}
+        <CardContent className="p-6">
+          <DocumentEditorWorkspace
+            title={title}
+            onTitleChange={setTitle}
+            onContentChange={setContent}
+            status={status}
+            onStatusChange={setStatus}
+            statusOptions={CREATE_STATUS_OPTIONS}
+            statusLabel="Initial Review Status"
+            initialMarkdown=""
+            editorKey={documentId ?? "new"}
+            titleError={errors.title}
+            contentError={errors.content}
             disabled={isLoading}
-          />
-
-          {/* Status Selection */}
-          <div className="flex flex-col space-y-1.5">
-            <label className="text-xs font-semibold text-gewci-dark/80 select-none uppercase tracking-wider">
-              Initial Review Status
-            </label>
-            <select
-              value={status}
-              onChange={(e) => setStatus(e.target.value)}
-              disabled={isLoading}
-              className="flex h-10 w-full rounded-[--radius-button] border border-gewci-gray/40 bg-gewci-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary disabled:cursor-not-allowed disabled:opacity-50 transition-all text-gewci-dark font-medium"
-            >
-              <option value="draft">Draft (Private or hidden from reviewers)</option>
-              <option value="in_review">In Review (Ready for reviewer annotations)</option>
-            </select>
-          </div>
-
-          {/* Content */}
-          <Textarea
-            label="Document Content (Markdown Supported)"
-            placeholder="# Introduction&#10;&#10;Write document sections here using standard markdown formatting..."
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            error={errors.content}
-            rows={15}
-            disabled={isLoading}
-            className="font-mono text-sm"
+            editorPlaceholder="Write your document here. Use the toolbar for headings, lists, links, and tables."
+            autoSaveStatus={autoSaveStatus}
+            autoSaveError={autoSaveError}
+            lastSavedAt={lastSavedAt}
+            isDirty={isDirty}
+            canAutoSave={canAutoSave}
           />
         </CardContent>
       </Card>
 
-      {/* Buttons */}
       <div className="flex items-center justify-between">
         <Button
           type="button"
@@ -124,7 +179,7 @@ export function DocumentCreateForm() {
 
         <Button type="submit" isLoading={isLoading} className="gap-2">
           <Save className="h-4 w-4" />
-          <span>Save Document</span>
+          <span>{documentId ? "Done" : "Save Document"}</span>
         </Button>
       </div>
     </form>

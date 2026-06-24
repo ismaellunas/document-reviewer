@@ -74,3 +74,95 @@ body {
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(179, 185, 190, 0.2);
 }
+
+/* MDXEditor — align with GEWCI document reader styling */
+.document-mdx-editor-shell .mdxeditor {
+  --basePageBg: var(--color-gewci-white);
+  --baseBg: var(--color-gewci-white);
+  --baseBgActive: color-mix(in srgb, var(--color-gewci-navy) 8%, white);
+  --baseBorder: color-mix(in srgb, var(--color-gewci-gray) 55%, white);
+  --baseBorderHover: var(--color-gewci-gray);
+  --baseText: var(--color-gewci-dark);
+  --baseTextContrast: var(--color-gewci-dark);
+  --accentBase: var(--color-gewci-navy);
+  --accentBg: color-mix(in srgb, var(--color-gewci-navy) 10%, white);
+  --accentBgActive: color-mix(in srgb, var(--color-gewci-navy) 16%, white);
+  --accentBgHover: color-mix(in srgb, var(--color-gewci-navy) 12%, white);
+  --accentText: var(--color-gewci-navy);
+  --accentTextContrast: var(--color-gewci-white);
+  --font-family: var(--font-sans);
+  background: var(--color-gewci-white);
+  color: var(--color-gewci-dark);
+  border: 0;
+  border-radius: 0;
+}
+
+.document-mdx-toolbar {
+  border-bottom: 1px solid color-mix(in srgb, var(--color-gewci-gray) 40%, white);
+  background: color-mix(in srgb, var(--color-gewci-gray) 8%, white);
+  padding: 0.35rem 0.5rem;
+  flex-wrap: wrap;
+  gap: 0.15rem;
+}
+
+.document-editor-content {
+  min-height: 360px;
+  padding: 1rem 1.25rem;
+  font-family: var(--font-sans);
+}
+
+.document-editor-content h1 {
+  color: var(--color-gewci-navy);
+  font-family: var(--font-heading);
+  font-weight: 800;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-gewci-gray) 35%, white);
+  padding-bottom: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.document-editor-content h2,
+.document-editor-content h3 {
+  color: var(--color-gewci-navy);
+  font-family: var(--font-heading);
+  font-weight: 700;
+}
+
+.document-editor-content blockquote {
+  border-left: 4px solid var(--color-gewci-gold);
+  background: color-mix(in srgb, var(--color-gewci-navy) 5%, white);
+  border-radius: 0 0.5rem 0.5rem 0;
+  padding: 0.75rem 1rem;
+  font-style: italic;
+}
+
+.document-editor-content code {
+  background: color-mix(in srgb, var(--color-gewci-gray) 18%, white);
+  color: var(--color-primary-dark);
+  border: 1px solid color-mix(in srgb, var(--color-gewci-gray) 35%, white);
+  border-radius: 0.25rem;
+  padding: 0.1rem 0.35rem;
+  font-size: 0.875em;
+}
+
+.document-editor-content pre {
+  background: var(--color-gewci-dark);
+  color: var(--color-gewci-white);
+  border-radius: 0.75rem;
+  padding: 1rem;
+}
+
+.document-mdx-editor-shell--fullscreen .mdxeditor {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.document-mdx-editor-shell--fullscreen .mdxeditor-root-contenteditable {
+  flex: 1;
+  min-height: 0;
+}
+
+.document-editor-content--fullscreen {
+  min-height: calc(100vh - 14rem);
+}
