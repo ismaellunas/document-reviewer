@@ -19,7 +19,7 @@ import { Avatar } from "@/components/gewci/Avatar";
 import { Button } from "@/components/gewci/Button";
 import { ToolsMenu } from "@/components/gewci/ToolsMenu";
 import { MINISTRY_TOOLS, resolveMinistryTools } from "@/lib/config/tools";
-import { createClient } from "@/lib/supabase/client";
+import { useSupabaseBrowser } from "@/hooks/useSupabaseBrowser";
 
 interface ViewerCapabilities {
   isAdmin: boolean;
@@ -28,7 +28,7 @@ interface ViewerCapabilities {
 
 export function LibraryHeader() {
   const router = useRouter();
-  const supabase = createClient();
+  const getSupabase = useSupabaseBrowser();
 
   const [user, setUser] = React.useState<User | null>(null);
   const [capabilities, setCapabilities] = React.useState<ViewerCapabilities>({
@@ -43,6 +43,8 @@ export function LibraryHeader() {
   const userMenuRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
+    const supabase = getSupabase();
+
     async function getUser() {
       const {
         data: { session },
@@ -58,7 +60,7 @@ export function LibraryHeader() {
     });
 
     return () => subscription.unsubscribe();
-  }, [supabase.auth]);
+  }, [getSupabase]);
 
   React.useEffect(() => {
     if (!user) {
@@ -99,7 +101,7 @@ export function LibraryHeader() {
   }, []);
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    await getSupabase().auth.signOut();
     router.refresh();
   };
 

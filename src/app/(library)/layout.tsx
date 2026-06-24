@@ -2,6 +2,9 @@ import React from "react";
 import { LibraryHeader } from "@/components/library/LibraryHeader";
 import { Footer } from "@/components/gewci/Footer";
 
+// Library shell reads auth state via Supabase; skip static prerender at build.
+export const dynamic = "force-dynamic";
+
 export default function LibraryLayout({
   children,
 }: {

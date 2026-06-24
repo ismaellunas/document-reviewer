@@ -92,6 +92,17 @@ export interface AdminUserView extends GEWCIUser {
 
 export type PrayerRequestStatus = "pending" | "prayed";
 
+export interface PrayerRequestClientMetadata {
+  ip: string | null;
+  user_agent: string | null;
+  browser: string | null;
+  os: string | null;
+  device_type: "desktop" | "mobile" | "tablet" | "unknown";
+  accept_language: string | null;
+  referer: string | null;
+  timezone: string | null;
+}
+
 export interface PrayerRequest {
   id: string;
   first_name: string;
@@ -101,6 +112,8 @@ export interface PrayerRequest {
   body: string;
   wants_pray_with: boolean;
   contact_via_email: boolean;
+  is_anonymous: boolean;
+  client_metadata: PrayerRequestClientMetadata;
   status: PrayerRequestStatus;
   prayed_at: string | null;
   created_at: string;

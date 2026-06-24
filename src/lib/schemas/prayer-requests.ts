@@ -19,17 +19,29 @@ const optionalEmail = z
   )
   .transform((v) => (v && v.length > 0 ? v : undefined));
 
-export const SubmitPrayerRequestSchema = z.object({
-  first_name: z.string().trim().min(1, "First name is required").max(80),
-  last_name: optionalShortText(80),
-  email: optionalEmail,
-  phone: optionalShortText(20),
-  body: z.string().trim().min(1, "Prayer request is required").max(8000),
-  wants_pray_with: z.boolean().optional().default(false),
-  contact_via_email: z.boolean().optional().default(false),
-  /** Honeypot — must be empty for real submissions. */
-  website: z.string().max(0).optional(),
-});
+export const SubmitPrayerRequestSchema = z
+  .object({
+    is_anonymous: z.boolean().optional().default(false),
+    first_name: optionalShortText(80),
+    last_name: optionalShortText(80),
+    email: optionalEmail,
+    phone: optionalShortText(20),
+    body: z.string().trim().min(1, "Prayer request is required").max(8000),
+    wants_pray_with: z.boolean().optional().default(false),
+    contact_via_email: z.boolean().optional().default(false),
+    timezone: optionalShortText(80),
+    /** Honeypot — must be empty for real submissions. */
+    website: z.string().max(0).optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (!data.is_anonymous && !data.first_name) {
+      ctx.addIssue({
+        code: "custom",
+        message: "First name is required",
+        path: ["first_name"],
+      });
+    }
+  });
 
 export const ListPrayerRequestsQuerySchema = z.object({
   status: z.enum(["pending", "prayed", "all"]).optional().default("all"),

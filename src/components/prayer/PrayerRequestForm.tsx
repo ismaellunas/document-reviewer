@@ -8,9 +8,18 @@ import { Textarea } from "@/components/gewci/Textarea";
 import { Button } from "@/components/gewci/Button";
 import { Card, CardContent } from "@/components/gewci/Card";
 
+function clientTimezone(): string | undefined {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone;
+  } catch {
+    return undefined;
+  }
+}
+
 export function PrayerRequestForm() {
   const router = useRouter();
 
+  const [isAnonymous, setIsAnonymous] = React.useState(false);
   const [firstName, setFirstName] = React.useState("");
   const [lastName, setLastName] = React.useState("");
   const [email, setEmail] = React.useState("");
@@ -27,6 +36,14 @@ export function PrayerRequestForm() {
     form?: string;
   }>({});
 
+  const handleAnonymousChange = (checked: boolean) => {
+    setIsAnonymous(checked);
+    if (checked) {
+      setFirstName("");
+      setLastName("");
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrors({});
@@ -37,13 +54,15 @@ export function PrayerRequestForm() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          first_name: firstName,
-          last_name: lastName || undefined,
+          is_anonymous: isAnonymous,
+          first_name: isAnonymous ? undefined : firstName,
+          last_name: isAnonymous ? undefined : lastName || undefined,
           email: email || undefined,
           phone: phone || undefined,
           body,
           wants_pray_with: wantsPrayWith,
           contact_via_email: contactViaEmail,
+          timezone: clientTimezone(),
           website: honeypot,
         }),
       });
@@ -84,22 +103,42 @@ export function PrayerRequestForm() {
 
       <Card className="border border-gewci-gray/20 shadow-xs">
         <CardContent className="p-6 sm:p-8 space-y-5">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-            <Input
-              label="First Name *"
-              value={firstName}
-              onChange={(e) => setFirstName(e.target.value)}
-              error={errors.first_name}
+          <label className="flex items-start gap-3 cursor-pointer select-none rounded-[--radius-button] border border-gewci-gray/20 bg-gewci-gray/5 px-4 py-3">
+            <input
+              type="checkbox"
+              checked={isAnonymous}
+              onChange={(e) => handleAnonymousChange(e.target.checked)}
               disabled={isLoading}
-              required
+              className="mt-1 h-4 w-4 rounded border-gewci-gray/50 text-primary focus:ring-primary/20"
             />
-            <Input
-              label="Last Name"
-              value={lastName}
-              onChange={(e) => setLastName(e.target.value)}
-              disabled={isLoading}
-            />
-          </div>
+            <span className="text-sm text-gewci-dark/80">
+              <span className="font-semibold text-gewci-dark block">
+                Submit anonymously
+              </span>
+              We will assign you a private label such as &ldquo;Prayer Friend
+              K7M2&rdquo; so our team can refer to your request without using
+              your name.
+            </span>
+          </label>
+
+          {!isAnonymous && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <Input
+                label="First Name *"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                error={errors.first_name}
+                disabled={isLoading}
+                required
+              />
+              <Input
+                label="Last Name"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                disabled={isLoading}
+              />
+            </div>
+          )}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <Input
@@ -171,10 +210,17 @@ export function PrayerRequestForm() {
         </Button>
       </div>
 
-      <p className="text-xs text-gewci-dark/50 flex items-center gap-1.5">
-        <Heart className="h-3.5 w-3.5 text-secondary shrink-0" />
-        All prayer requests are confidential and we respect your privacy.
-      </p>
+      <div className="space-y-2 text-xs text-gewci-dark/50">
+        <p className="flex items-start gap-1.5">
+          <Heart className="h-3.5 w-3.5 text-secondary shrink-0 mt-0.5" />
+          All prayer requests are confidential and we respect your privacy.
+        </p>
+        <p>
+          To help prevent misuse, we record limited technical details when you
+          submit (such as IP address, browser, and timezone). This information
+          is only visible to authorised administrators.
+        </p>
+      </div>
     </form>
   );
 }

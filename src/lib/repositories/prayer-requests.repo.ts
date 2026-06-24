@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-import type { PrayerRequest, PrayerRequestStatus } from "@/lib/types";
+import type { PrayerRequest, PrayerRequestClientMetadata, PrayerRequestStatus } from "@/lib/types";
 
 export interface PrayerRequestInsertInput {
   first_name: string;
@@ -10,12 +10,58 @@ export interface PrayerRequestInsertInput {
   body: string;
   wants_pray_with: boolean;
   contact_via_email: boolean;
+  is_anonymous: boolean;
+  client_metadata: PrayerRequestClientMetadata;
 }
 
 export interface PrayerRequestListFilters {
   status?: PrayerRequestStatus | "all";
   from?: string;
   to?: string;
+}
+
+const EMPTY_CLIENT_METADATA: PrayerRequestClientMetadata = {
+  ip: null,
+  user_agent: null,
+  browser: null,
+  os: null,
+  device_type: "unknown",
+  accept_language: null,
+  referer: null,
+  timezone: null,
+};
+
+function normalizeClientMetadata(raw: unknown): PrayerRequestClientMetadata {
+  if (!raw || typeof raw !== "object") return EMPTY_CLIENT_METADATA;
+  const obj = raw as Record<string, unknown>;
+  const device = obj.device_type;
+  const device_type =
+    device === "desktop" ||
+    device === "mobile" ||
+    device === "tablet" ||
+    device === "unknown"
+      ? device
+      : "unknown";
+
+  return {
+    ip: typeof obj.ip === "string" ? obj.ip : null,
+    user_agent: typeof obj.user_agent === "string" ? obj.user_agent : null,
+    browser: typeof obj.browser === "string" ? obj.browser : null,
+    os: typeof obj.os === "string" ? obj.os : null,
+    device_type,
+    accept_language:
+      typeof obj.accept_language === "string" ? obj.accept_language : null,
+    referer: typeof obj.referer === "string" ? obj.referer : null,
+    timezone: typeof obj.timezone === "string" ? obj.timezone : null,
+  };
+}
+
+function normalizePrayerRequest(row: PrayerRequest): PrayerRequest {
+  return {
+    ...row,
+    is_anonymous: row.is_anonymous ?? false,
+    client_metadata: normalizeClientMetadata(row.client_metadata),
+  };
 }
 
 export const prayerRequestsRepo = {
@@ -33,6 +79,8 @@ export const prayerRequestsRepo = {
       body: input.body,
       wants_pray_with: input.wants_pray_with,
       contact_via_email: input.contact_via_email,
+      is_anonymous: input.is_anonymous,
+      client_metadata: input.client_metadata,
       status: "pending" as const,
       prayed_at: null,
     };
@@ -45,10 +93,10 @@ export const prayerRequestsRepo = {
       throw new Error(`prayerRequestsRepo.create: ${error.message}`);
     }
 
-    return {
+    return normalizePrayerRequest({
       ...row,
       created_at: new Date().toISOString(),
-    };
+    });
   },
 
   async list(
@@ -76,7 +124,7 @@ export const prayerRequestsRepo = {
     if (error) {
       throw new Error(`prayerRequestsRepo.list: ${error.message}`);
     }
-    return data ?? [];
+    return (data ?? []).map(normalizePrayerRequest);
   },
 
   async markPrayed(

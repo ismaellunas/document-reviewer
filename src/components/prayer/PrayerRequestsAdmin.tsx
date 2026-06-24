@@ -4,6 +4,7 @@ import React from "react";
 import { useRouter } from "next/navigation";
 import {
   CheckCircle2,
+  Info,
   Loader2,
   Printer,
   Trash2,
@@ -11,7 +12,9 @@ import {
 import { Button } from "@/components/gewci/Button";
 import { Input } from "@/components/gewci/Input";
 import { EmptyState } from "@/components/gewci/EmptyState";
+import { PrayerRequestDetailsModal } from "@/components/prayer/PrayerRequestDetailsModal";
 import type { PrayerRequest, PrayerRequestStatus } from "@/lib/types";
+import { prayerRequestDisplayName } from "@/lib/prayer/display";
 import { formatDate } from "@/lib/utils";
 
 interface PrayerRequestsAdminProps {
@@ -22,7 +25,7 @@ interface PrayerRequestsAdminProps {
 }
 
 function displayName(request: PrayerRequest) {
-  return [request.first_name, request.last_name].filter(Boolean).join(" ");
+  return prayerRequestDisplayName(request);
 }
 
 export function PrayerRequestsAdmin({
@@ -40,6 +43,8 @@ export function PrayerRequestsAdmin({
   const [selected, setSelected] = React.useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = React.useState(false);
   const [actionError, setActionError] = React.useState<string | null>(null);
+  const [detailsRequest, setDetailsRequest] =
+    React.useState<PrayerRequest | null>(null);
 
   React.useEffect(() => {
     setRequests(initialRequests);
@@ -241,6 +246,9 @@ export function PrayerRequestsAdmin({
                 <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-gewci-dark/60">
                   Submitted
                 </th>
+                <th className="px-4 py-3 text-right text-xs font-bold uppercase tracking-wider text-gewci-dark/60 w-24">
+                  <span className="sr-only">Details</span>
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gewci-gray/10">
@@ -257,8 +265,15 @@ export function PrayerRequestsAdmin({
                   </td>
                   <td className="px-4 py-3 align-top font-semibold text-gewci-dark whitespace-nowrap">
                     {displayName(request)}
-                    {(request.wants_pray_with || request.contact_via_email) && (
+                    {(request.is_anonymous ||
+                      request.wants_pray_with ||
+                      request.contact_via_email) && (
                       <div className="mt-1 flex flex-wrap gap-1">
+                        {request.is_anonymous && (
+                          <span className="text-[10px] font-bold uppercase tracking-wider rounded bg-gewci-gray/15 text-gewci-dark/60 px-1.5 py-0.5">
+                            Anonymous
+                          </span>
+                        )}
                         {request.wants_pray_with && (
                           <span className="text-[10px] font-bold uppercase tracking-wider rounded bg-primary/10 text-primary px-1.5 py-0.5">
                             Pray together
@@ -281,12 +296,29 @@ export function PrayerRequestsAdmin({
                   <td className="px-4 py-3 align-top text-xs text-gewci-dark/60 whitespace-nowrap">
                     {formatDate(request.created_at)}
                   </td>
+                  <td className="px-4 py-3 align-top text-right">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0"
+                      onClick={() => setDetailsRequest(request)}
+                      aria-label={`View details for ${displayName(request)}`}
+                    >
+                      <Info className="h-4 w-4" />
+                    </Button>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
       )}
+
+      <PrayerRequestDetailsModal
+        request={detailsRequest}
+        onClose={() => setDetailsRequest(null)}
+      />
     </div>
   );
 }
