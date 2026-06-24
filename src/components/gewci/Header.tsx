@@ -18,7 +18,7 @@ import { Avatar } from "./Avatar";
 import { DocumentReviewLogo } from "@/components/drr/DocumentReviewLogo";
 import { ToolsMenu } from "@/components/gewci/ToolsMenu";
 import { resolveMinistryTools } from "@/lib/config/tools";
-import { createClient } from "@/lib/supabase/client";
+import { useSupabaseBrowser } from "@/hooks/useSupabaseBrowser";
 
 interface ViewerCapabilities {
   isAdmin: boolean;
@@ -27,7 +27,7 @@ interface ViewerCapabilities {
 
 export function Header() {
   const router = useRouter();
-  const supabase = createClient();
+  const getSupabase = useSupabaseBrowser();
 
   const [user, setUser] = React.useState<User | null>(null);
   const [capabilities, setCapabilities] = React.useState<ViewerCapabilities>({
@@ -42,6 +42,8 @@ export function Header() {
   const userMenuRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
+    const supabase = getSupabase();
+
     async function getUser() {
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
@@ -59,7 +61,7 @@ export function Header() {
     return () => {
       subscription.unsubscribe();
     };
-  }, [supabase.auth]);
+  }, [getSupabase]);
 
   React.useEffect(() => {
     if (!user) {
@@ -93,7 +95,7 @@ export function Header() {
   }, []);
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    await getSupabase().auth.signOut();
     router.push("/");
   };
 

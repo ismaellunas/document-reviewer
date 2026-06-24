@@ -3,7 +3,7 @@
 import React, { Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { ShieldAlert, LogIn, Loader2 } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
+import { useSupabaseBrowser } from "@/hooks/useSupabaseBrowser";
 import { Button } from "@/components/gewci/Button";
 import { Card, CardContent } from "@/components/gewci/Card";
 import { Input } from "@/components/gewci/Input";
@@ -34,7 +34,7 @@ function LoginFallback() {
 function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const supabase = createClient();
+  const getSupabase = useSupabaseBrowser();
 
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
@@ -49,7 +49,7 @@ function LoginContent() {
     setIsLoading(true);
     setAuthError("");
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
+      const { error } = await getSupabase().auth.signInWithOAuth({
         provider: "google",
         options: {
           redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirectTo)}`,
@@ -74,7 +74,7 @@ function LoginContent() {
     setAuthError("");
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { error } = await getSupabase().auth.signInWithPassword({
         email: email.trim(),
         password,
       });

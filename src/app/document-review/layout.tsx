@@ -2,6 +2,9 @@ import React from "react";
 import { Header } from "@/components/gewci/Header";
 import { Footer } from "@/components/gewci/Footer";
 
+// Review shell reads auth state via Supabase; skip static prerender at build.
+export const dynamic = "force-dynamic";
+
 export default function DocumentReviewLayout({
   children,
 }: {
