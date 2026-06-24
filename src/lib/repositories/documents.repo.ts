@@ -176,6 +176,46 @@ export const documentsRepo = {
     return { affected: data?.length ?? 0 };
   },
 
+  /** Approved documents for the public library (no relation embeds). */
+  async listApproved(
+    supabase: SupabaseClient,
+    options: { limit?: number } = {},
+  ): Promise<DRRDocument[]> {
+    let query = supabase
+      .from("drr_documents")
+      .select("*")
+      .eq("status", "approved")
+      .order("updated_at", { ascending: false });
+
+    if (typeof options.limit === "number") {
+      query = query.limit(options.limit);
+    }
+
+    const { data, error } = await query.returns<DRRDocument[]>();
+    if (error) {
+      throw new Error(`documentsRepo.listApproved: ${error.message}`);
+    }
+    return data ?? [];
+  },
+
+  async findApprovedById(
+    supabase: SupabaseClient,
+    id: string,
+  ): Promise<DRRDocument | null> {
+    const { data, error } = await supabase
+      .from("drr_documents")
+      .select("*")
+      .eq("id", id)
+      .eq("status", "approved")
+      .maybeSingle<DRRDocument>();
+
+    if (error) {
+      console.error("documentsRepo.findApprovedById error:", { id, error });
+      return null;
+    }
+    return data;
+  },
+
   async countByStatus(
     supabase: SupabaseClient,
     status?: DocumentStatus,

@@ -31,6 +31,8 @@ import { commentsRepo } from "@/lib/repositories/comments.repo";
 import { usersRepo } from "@/lib/repositories/users.repo";
 import { auditService } from "@/lib/services/audit.service";
 import { permissionsService } from "@/lib/services/permissions.service";
+import { createPublicClient } from "@/lib/supabase/public";
+import { createClient } from "@/lib/supabase/server";
 import type {
   DashboardData,
   DocumentStatus,
@@ -244,5 +246,56 @@ export const documentsService = {
       recentDocs,
       canCreate,
     };
+  },
+
+  /** Public library: approved documents readable without authentication. */
+  async listPublicLibrary(): Promise<DRRDocument[]> {
+    if (
+      !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+      !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    ) {
+      return [];
+    }
+
+    try {
+      // Prefer the cookie-aware server client so signed-in visitors see
+      // approved docs via the existing authenticated read policy.
+      const supabase = await createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (user) {
+        return await documentsRepo.listApproved(supabase);
+      }
+
+      // Anonymous visitors rely on the public approved-documents RLS policy
+      // (migration 006).
+      return await documentsRepo.listApproved(createPublicClient());
+    } catch (err) {
+      console.error("documentsService.listPublicLibrary failed:", err);
+      return [];
+    }
+  },
+
+  async getPublicLibraryDocument(id: string): Promise<DRRDocument> {
+    if (
+      !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+      !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    ) {
+      throw new NotFoundError("document", id);
+    }
+
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    const reader = user ? supabase : createPublicClient();
+    const document = await documentsRepo.findApprovedById(reader, id);
+    if (!document) {
+      throw new NotFoundError("document", id);
+    }
+    return document;
   },
 };

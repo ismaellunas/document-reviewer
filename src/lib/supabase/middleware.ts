@@ -46,8 +46,12 @@ export async function updateSession(request: NextRequest) {
     request.nextUrl.pathname.startsWith("/login") ||
     request.nextUrl.pathname.startsWith("/auth");
 
+  const isPublicRoute =
+    request.nextUrl.pathname === "/" ||
+    request.nextUrl.pathname.startsWith("/documents/");
+
   // Unauthenticated users hitting protected routes go to /login (with a redirect hint).
-  if (!user && !isAuthPage) {
+  if (!user && !isAuthPage && !isPublicRoute) {
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname = "/login";
     redirectUrl.searchParams.set("redirectTo", request.nextUrl.pathname);
