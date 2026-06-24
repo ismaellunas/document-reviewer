@@ -3,12 +3,13 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/gewci/Button";
 import { PrayerRequestForm } from "@/components/prayer/PrayerRequestForm";
-import { absoluteUrl } from "@/lib/config/site";
+import {
+  PRAYER_OG_IMAGE_URL,
+  PRODUCTION_SITE_URL,
+} from "@/lib/config/site";
 
 const prayerDescription =
   "Share your prayer request with the GEWCI prayer team. We would be honoured to pray for you — all requests are confidential.";
-
-const prayerOgImage = absoluteUrl("/prayer-thumb-wide.png");
 
 export const metadata: Metadata = {
   title: "Prayer Requests",
@@ -16,13 +17,13 @@ export const metadata: Metadata = {
   openGraph: {
     title: "How Can We Pray For You?",
     description: prayerDescription,
-    url: "/prayer-requests",
+    url: `${PRODUCTION_SITE_URL}/prayer-requests`,
     siteName: "GEWCI Ministry Tools",
     type: "website",
     locale: "en_AU",
     images: [
       {
-        url: prayerOgImage,
+        url: PRAYER_OG_IMAGE_URL,
         width: 1731,
         height: 909,
         alt: "How can we pray for you today? Submit your prayer request to GEWCI.",
@@ -34,7 +35,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "How Can We Pray For You?",
     description: prayerDescription,
-    images: [prayerOgImage],
+    images: [PRAYER_OG_IMAGE_URL],
   },
 };
 
@@ -51,7 +52,7 @@ export default function PrayerRequestsPage() {
         <p className="text-sm sm:text-base text-gewci-dark/65 leading-relaxed">
           We love to pray for anyone who asks. We believe God hears and answers
           prayer, and we would be honoured to pray for you and whatever you are
-          facing. All prayer requests are confidential, and we respect your
+          facing. All prayer requests are confidential and we respect your
           privacy.
         </p>
       </section>

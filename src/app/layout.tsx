@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Outfit } from "next/font/google";
 import NextTopLoader from "nextjs-toploader";
-import { getSiteUrl } from "@/lib/config/site";
+import { PRODUCTION_SITE_URL } from "@/lib/config/site";
 import "./globals.css";
 
 const inter = Inter({
@@ -17,7 +17,7 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(getSiteUrl()),
+  metadataBase: new URL(PRODUCTION_SITE_URL),
   title: "GEWCI Ministry Tools",
   description:
     "Browse approved ministry documents and access GEWCI tools for review, collaboration, and presentation.",
