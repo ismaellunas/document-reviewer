@@ -1,7 +1,38 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Heart, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/gewci/Button";
 import { PrayerRequestForm } from "@/components/prayer/PrayerRequestForm";
+
+const prayerDescription =
+  "Share your prayer request with the GEWCI prayer team. We would be honoured to pray for you — all requests are confidential.";
+
+export const metadata: Metadata = {
+  title: "Prayer Requests",
+  description: prayerDescription,
+  openGraph: {
+    title: "How Can We Pray For You?",
+    description: prayerDescription,
+    url: "/prayer-requests",
+    siteName: "GEWCI Ministry Tools",
+    type: "website",
+    locale: "en_AU",
+    images: [
+      {
+        url: "/prayer-thumb-wide.png",
+        width: 1731,
+        height: 909,
+        alt: "How can we pray for you today? Submit your prayer request to GEWCI.",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "How Can We Pray For You?",
+    description: prayerDescription,
+    images: ["/prayer-thumb-wide.png"],
+  },
+};
 
 export default function PrayerRequestsPage() {
   return (
